@@ -72,5 +72,21 @@ def enterLoop():
                 # ArgumentParser prints its help and then the loop continues.
                 continue
 
+def expResult():
+    eData = [['01/01/18', 'Solde', np.nan, 100, -100],
+['05/01/18', 'Migros', np.nan, 55.25, np.nan],
+['05/01/18', 'Lidl', np.nan, 20, -175.25],
+['31/01/18', 'Virement', 200, np.nan, 24.75],
+]
+    e = pd.DataFrame(columns=['Date', 'Lib', 'Debit', 'Credit', 'Solde'],
+                    data=eData, index=[x for x in range(1, len(eData) + 1)])
+
+    pd.options.display.float_format = '{:,.2f}'.format
+                    
+    e.fillna('', inplace=True)
+    #print(e.to_string(index=False))
+    print(e)
+
 if __name__ == '__main__':
     enterLoop()
+    expResult()
