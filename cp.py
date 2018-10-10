@@ -4,6 +4,7 @@
 
 import argparse
 import pandas as pd
+import numpy as np
 import os
 
 
@@ -66,6 +67,7 @@ def enterLoop():
 
                 colNames = ['DATE', 'CATEGORY', '?', 'AMOUNT', 'NOTE']
                 df = pd.read_excel(expenseFilePath, header=None, names=colNames)
+                df.fillna('', inplace=True)
                 print(df.head())
             except SystemExit:
                 # exception thrown by the ArgumentParser.exit method called on error or on help request.
@@ -78,15 +80,27 @@ def expResult():
 ['05/01/18', 'Lidl', np.nan, 20, -175.25],
 ['31/01/18', 'Virement', 200, np.nan, 24.75],
 ]
-    e = pd.DataFrame(columns=['Date', 'Lib', 'Debit', 'Credit', 'Solde'],
+    e = pd.DataFrame(columns=['Date', 'Lib', 'DEBIT', 'CREDIT', 'SOLDE'],
                     data=eData, index=[x for x in range(1, len(eData) + 1)])
 
     pd.options.display.float_format = '{:,.2f}'.format
                     
     e.fillna('', inplace=True)
-    #print(e.to_string(index=False))
-    print(e)
+    ei = e.set_index(['Date', 'Lib'])
+    print(ei)
+
+def expenseData():
+    colNames = ['Date', 'Lib', 'UNUSED', 'CREDIT', 'NOTE']
+    df = pd.read_excel(DEFAULT_EXPENSES_EXPORT_FILE, header=None, names=colNames)
+    df.drop(columns=['UNUSED'], inplace=True)
+    df.fillna('', inplace=True)
+    dfi = df.set_index(['Date', 'Lib'])
+    dfi.drop(columns=['NOTE'], inplace=True)
+    print(dfi.head())
+    print()
+
 
 if __name__ == '__main__':
-    enterLoop()
+#    enterLoop()
+    expenseData()
     expResult()
