@@ -103,11 +103,12 @@ def expenseData():
     #Replacing empty shop value
     df['Lib'] = df['Lib'].fillna('Divers')
 
-    #Set index to Date/Lib couple
-    dfi = df.set_index(['Date', 'Lib'])
-
     #Dropping Note column
-    dfi.drop(columns=['Note'], inplace=True)
+    dfi = df.drop(columns=['Note'])
+
+    #Set index to Date/Lib couple
+    dfi.set_index(['Date', 'Lib'], inplace=True)
+    dfi.sort_index(inplace=True) #improves multi index select performance
 
     #Adding SOLDE column
     dfi['SOLDE'] = pd.Series(index=dfi.index)
@@ -116,6 +117,15 @@ def expenseData():
     dfi.fillna('', inplace=True)
 
     print(dfi.head(20))
+
+    print()
+    print('Accessing rows with Date only index')
+    print(dfi.loc['2016-07-01'])
+    print()
+
+    print()
+    print('Accessing row with Date/Lib index')
+    print(dfi.loc['2016-07-01', 'Crêperie'])
     print()
 
 
