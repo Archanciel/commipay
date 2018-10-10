@@ -75,6 +75,7 @@ def enterLoop():
                 continue
 
 def expResult():
+    print('Expected results')
     eData = [['01/01/18', 'Solde', np.nan, 100, -100],
 ['05/01/18', 'Migros', np.nan, 55.25, np.nan],
 ['05/01/18', 'Lidl', np.nan, 20, -175.25],
@@ -90,13 +91,31 @@ def expResult():
     print(ei)
 
 def expenseData():
-    colNames = ['Date', 'Lib', 'UNUSED', 'CREDIT', 'NOTE']
+    #Setting col names so it matches exp results structure
+    colNames = ['Date', 'Lib', 'DEBIT', 'CREDIT', 'Note']
+
     df = pd.read_excel(DEFAULT_EXPENSES_EXPORT_FILE, header=None, names=colNames)
-    df.drop(columns=['UNUSED'], inplace=True)
-    df.fillna('', inplace=True)
+
+    print('Raw imported exp data')
+    print(df.head())
+    print()
+
+    #Replacing empty shop value
+    df['Lib'] = df['Lib'].fillna('Divers')
+
+    #Set index to Date/Lib couple
     dfi = df.set_index(['Date', 'Lib'])
-    dfi.drop(columns=['NOTE'], inplace=True)
-    print(dfi.head())
+
+    #Dropping Note column
+    dfi.drop(columns=['Note'], inplace=True)
+
+    #Adding SOLDE column
+    dfi['SOLDE'] = pd.Series(index=dfi.index)
+
+    #Getting rid of remaining NaN values
+    dfi.fillna('', inplace=True)
+
+    print(dfi.head(20))
     print()
 
 
