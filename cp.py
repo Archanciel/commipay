@@ -76,10 +76,10 @@ def enterLoop():
 
 def expResult():
     print('Expected results')
-    eData = [['01/01/18', 'Solde', np.nan, 100, -100],
-['05/01/18', 'Migros', np.nan, 55.25, np.nan],
-['05/01/18', 'Lidl', np.nan, 20, -175.25],
-['31/01/18', 'Virement', 200, np.nan, 24.75],
+    eData = [['2018-01-01', 'Solde', np.nan, 100, -100],
+['2018-01-05', 'Migros', np.nan, 55.25, np.nan],
+['2018-01-05', 'Lidl', np.nan, 20, -175.25],
+['2018-01-31', 'Virement', 200, np.nan, 24.75],
 ]
     e = pd.DataFrame(columns=['Date', 'Lib', 'DEBIT', 'CREDIT', 'SOLDE'],
                     data=eData, index=[x for x in range(1, len(eData) + 1)])
@@ -90,13 +90,41 @@ def expResult():
     ei = e.set_index(['Date', 'Lib'])
     print(ei)
 
+
+def addedData(doPrint):
+    if doPrint:
+        print('Added data (from command line in the end)')
+    eData = [['2016-06-01', 'Solde', np.nan, 100, np.nan],
+             ['2016-07-05', 'Interio', np.nan, 20, np.nan],
+             ['2016-07-31', 'Virement', 200, np.nan, np.nan],
+             ]
+    e = pd.DataFrame(columns=['Date', 'Lib', 'DEBIT', 'CREDIT', 'SOLDE'],
+                     data=eData, index=[x for x in range(1, len(eData) + 1)])
+
+    pd.options.display.float_format = '{:,.2f}'.format
+
+    e.fillna('', inplace=True)
+
+    #Setting string date to Date object. WARNING: internal date format must
+    #yyyy-mm-dd in order for the Date index to be sorted correctly !
+    ei = e.set_index(['Date', 'Lib'])
+    e['Date'] = pd.to_datetime(e['Date'], format='%Y-%m-%d', utc=True)
+    e['Date'] = e['Date'].dt.date #removing 00:00:00 time component
+    ei.sort_index(inplace=True)
+    if doPrint:
+        print(ei)
+        print()
+
+    return ei
+
+
 def expenseData():
     #Setting col names so it matches exp results structure
     colNames = ['Date', 'Lib', 'DEBIT', 'CREDIT', 'Note']
 
     df = pd.read_excel(DEFAULT_EXPENSES_EXPORT_FILE, header=None, names=colNames)
 
-    print('Raw imported exp data')
+    print('Raw imported expense data')
     print(df.head())
     print()
 
@@ -105,6 +133,10 @@ def expenseData():
 
     #Dropping Note column
     dfi = df.drop(columns=['Note'])
+
+    #Altering date format
+#    dfi['Date'] = dfi['Date'].dt.date #removing 00:00:00 time component
+    dfi['Date'] = dfi['Date'].dt.strftime('%Y-%m-%d')
 
     #Set index to Date/Lib couple
     dfi.set_index(['Date', 'Lib'], inplace=True)
@@ -116,20 +148,31 @@ def expenseData():
     #Getting rid of remaining NaN values
     dfi.fillna('', inplace=True)
 
-    print(dfi.head(20))
-
+    print('Structured imported expense data')
+    print(dfi.head())
     print()
-    print('Accessing rows with Date only index')
+
+    print('Accessing rows with 2016-07-01 Date only index')
     print(dfi.loc['2016-07-01'])
     print()
 
     print()
-    print('Accessing row with Date/Lib index')
+    print('Accessing row with 2016-07-01 Crêperie Date/Lib index')
     print(dfi.loc['2016-07-01', 'Crêperie'])
     print()
 
+    print('Imported expense data after adding added data')
+
+    #Adding command line entered data
+    dfa = pd.concat([dfi, addedData(False)], ignore_index=False)
+    dfa.sort_index(inplace=True) #required othervise added data remains at end of DataFrame !
+
+    print(dfa.head(30))
+
+    print()
 
 if __name__ == '__main__':
 #    enterLoop()
+    addedData(True)
     expenseData()
     expResult()
