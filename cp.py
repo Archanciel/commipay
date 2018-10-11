@@ -171,8 +171,31 @@ def expenseData():
 
     print()
 
+def explGroupBy():
+    eData = [['2016-06-01', 'Solde', np.nan, 100, np.nan],
+             ['2016-07-05', 'Interio', np.nan, 20, np.nan],
+             ['2016-07-05', 'Hornbach', np.nan, 50, np.nan],
+             ['2016-07-31', 'Interio', np.nan, 35, np.nan],
+             ['2016-07-31', 'Virement', 200, np.nan, np.nan],
+             ]
+    exp = pd.DataFrame(columns=['Date', 'Lib', 'DEBIT', 'CREDIT', 'SOLDE'], data=eData,
+                       index=[x for x in range(1, len(eData) + 1)])
+    #exp.fillna('', inplace=True) breaks the groupby !
+
+    expG = exp.groupby('Date').sum()
+    expG['SOLDE'] = expG.apply(lambda row: row.DEBIT - row.CREDIT, axis=1)
+    expG['SOLDE'] = expG['SOLDE'].cumsum()
+
+    #merging groupby result with initial DataFrame
+    merged = pd.merge(exp, expG, on=['Date'])
+    merged.drop(merged.columns[[2, 3, 4]], axis=1, inplace=True)
+    merged.columns = ['Date', 'Lib', 'DEBIT', 'CREDIT', 'SOLDE']
+
+    print(merged)
+
 if __name__ == '__main__':
 #    enterLoop()
     addedData(True)
     expenseData()
     expResult()
+    explGroupBy()
