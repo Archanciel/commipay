@@ -191,6 +191,25 @@ def explGroupBy():
     merged.drop(merged.columns[[2, 3, 4]], axis=1, inplace=True)
     merged.columns = ['Date', 'Lib', 'DEBIT', 'CREDIT', 'SOLDE']
 
+    previousRow = merged.iloc[0]
+
+    for i in range(1, len(merged)):
+        row = merged.iloc[i]
+        if row.Date == previousRow.Date and row.SOLDE == previousRow.SOLDE:
+#            merged.iloc[i - 1].SOLDE = np.nan does not work !
+            merged.loc[i - 1, 'SOLDE'] = np.nan
+#            merged.SOLDE.iloc[i - 1] = np.nan #works appearantly, but generates an error msg
+                                              #'A value is trying to be set on a copy of a slice from a DataFrame'
+        previousRow = row
+
+    merged.fillna('', inplace=True)
+
+    print(merged)
+
+    #Set index to Date/Lib couple
+    merged.set_index(['Date', 'Lib'], inplace=True)
+    merged.sort_index(inplace=True) #improves multi index select performance
+
     print(merged)
 
 if __name__ == '__main__':
