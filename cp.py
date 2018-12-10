@@ -7,12 +7,15 @@ import pandas as pd
 import numpy as np
 import os
 
+LIBELLE_INDEX = 1
+
+DATE_INDEX = 0
 
 DEFAULT_EXPENSES_EXPORT_FILE_ANDROID = "/sdcard/export.xlsx"
 DEFAULT_MANUAL_INPUT_FILE_ANDROID = "/sdcard/cp_manual_input.csv"
 
-DEFAULT_EXPENSES_EXPORT_FILE_WINDOWS = "C:\\Users\\Jean-Pierre\\Downloads\\export.xlsx"
-DEFAULT_MANUAL_INPUT_FILE_WINDOWS = "C:\\Users\\Jean-Pierre\\Downloads\\cp_manual_input.csv"
+DEFAULT_EXPENSES_EXPORT_FILE_WINDOWS = "D:\\Users\\Jean-Pierre\\Downloads\\export.xlsx"
+DEFAULT_MANUAL_INPUT_FILE_WINDOWS = "D:\\Users\\Jean-Pierre\\Downloads\\cp_manual_input.csv"
 
 if os.name == 'posix':
     DEFAULT_EXPENSES_EXPORT_FILE = DEFAULT_EXPENSES_EXPORT_FILE_ANDROID
@@ -79,7 +82,7 @@ def expResult():
     eData = [['2018-01-01', 'Solde', np.nan, 100, -100],
 ['2018-01-05', 'Migros', np.nan, 55.25, np.nan],
 ['2018-01-05', 'Lidl', np.nan, 20, -175.25],
-['2018-01-31', 'Virement', 200, np.nan, 24.75],
+['2018-01-31', 'Virement', 400, np.nan, 224.75],
 ]
     e = pd.DataFrame(columns=['Date', 'Lib', 'DEBIT', 'CREDIT', 'SOLDE'],
                     data=eData, index=[x for x in range(1, len(eData) + 1)])
@@ -96,7 +99,8 @@ def addedData(doPrint):
         print('Added data (from command line in the end)')
     eData = [['2016-06-01', 'Solde', np.nan, 100, np.nan],
              ['2016-07-05', 'Interio', np.nan, 20, np.nan],
-             ['2016-07-31', 'Virement', 200, np.nan, np.nan],
+             ['2016-07-05', 'Bancomat', np.nan, 200, np.nan],
+             ['2016-07-31', 'Virement', 400, np.nan, np.nan],
              ]
     e = pd.DataFrame(columns=['Date', 'Lib', 'DEBIT', 'CREDIT', 'SOLDE'],
                      data=eData, index=[x for x in range(1, len(eData) + 1)])
@@ -105,7 +109,7 @@ def addedData(doPrint):
 
     e.fillna('', inplace=True)
 
-    #Setting string date to Date object. WARNING: internal date format must
+    #Setting string date to Date object. WARNING: internal date format must be
     #yyyy-mm-dd in order for the Date index to be sorted correctly !
     ei = e.set_index(['Date', 'Lib'])
     e['Date'] = pd.to_datetime(e['Date'], format='%Y-%m-%d', utc=True)
@@ -126,6 +130,8 @@ def expenseData():
 
     print('Raw imported expense data')
     print(df.head())
+    print('..')
+    print(df.tail())
     print()
 
     #Replacing empty shop value
@@ -150,24 +156,28 @@ def expenseData():
 
     print('Structured imported expense data')
     print(dfi.head())
+    print('..')
+    print(dfi.tail())
     print()
 
-    print('Accessing rows with 2016-07-01 Date only index')
-    print(dfi.loc['2016-07-01'])
+    selectionDate = '2016-07-01'
+    print('Accessing rows ' + selectionDate + ' Date only index')
+    print(dfi.loc[selectionDate])
     print()
 
     print()
-    print('Accessing row with 2016-07-01 Crêperie Date/Lib index')
-    print(dfi.loc['2016-07-01', 'Crêperie'])
+    print('Accessing row with ' + selectionDate + ' Crêperie Date/Lib index')
+    print(dfi.loc[selectionDate, 'Crêperie'])
     print()
 
     print('Imported expense data after adding added data')
 
-    #Adding command line entered data
+    #Adding command line entered data             ['2016-07-05', 'Hornbach', np.nan, 50, np.nan],
+
     dfa = pd.concat([dfi, addedData(False)], ignore_index=False)
     dfa.sort_index(inplace=True) #required othervise added data remains at end of DataFrame !
 
-    print(dfa.head(30))
+    print(dfa.head(31))
 
     print()
 
@@ -175,12 +185,15 @@ def explGroupBy():
     eData = [['2016-06-01', 'Solde', np.nan, 100, np.nan],
              ['2016-07-05', 'Interio', np.nan, 20, np.nan],
              ['2016-07-05', 'Hornbach', np.nan, 50, np.nan],
+             ['2016-07-05', 'Bancomat', np.nan, 200, np.nan],
              ['2016-07-31', 'Interio', np.nan, 35, np.nan],
-             ['2016-07-31', 'Virement', 200, np.nan, np.nan],
+             ['2016-07-31', 'Virement', 400, np.nan, np.nan],
              ]
     exp = pd.DataFrame(columns=['Date', 'Lib', 'DEBIT', 'CREDIT', 'SOLDE'], data=eData,
                        index=[x for x in range(1, len(eData) + 1)])
     #exp.fillna('', inplace=True) breaks the groupby !
+    print('\nExp data raw')
+    print(exp)
 
     expG = exp.groupby('Date').sum()
     expG['SOLDE'] = expG.apply(lambda row: row.DEBIT - row.CREDIT, axis=1)
@@ -195,20 +208,33 @@ def explGroupBy():
     merged.set_index(['Date', 'Lib'], inplace=True)
     merged.sort_index(inplace=True) #improves multi index select performance
 
+    print('\nExp data Group by')
     print(merged)
 
     previousRow = merged.iloc[0]
 
+    # required for exp.loc used in the loop below to succeed !
+    exp.set_index(['Date', 'Lib'], inplace=True)
+    exp.sort_index(inplace=True) #improves multi index select performance
+
     for i in range(1, len(merged)):
         row = merged.iloc[i]
-        if row.name[0] == previousRow.name[0] and row.SOLDE == previousRow.SOLDE:
-#            merged.iloc[i - 1].SOLDE = np.nan does not work !
-#            merged.loc[i - 1, 'SOLDE'] = np.nan #no longer works with set_index moved before loop !
+        rowDate = row.name[DATE_INDEX]
+        rowLib = row.name[LIBELLE_INDEX]
+        expRow = exp.loc[rowDate, rowLib]
+        rowDebit = expRow.DEBIT
+        rowCredit = expRow.CREDIT
+        merged.DEBIT.iloc[i] = rowDebit
+        merged.CREDIT.iloc[i] = rowCredit
+        if rowDate == previousRow.name[DATE_INDEX] and row.SOLDE == previousRow.SOLDE:
+            # merged.iloc[i - 1].SOLDE = np.nan does not work !
+            # merged.loc[i - 1, 'SOLDE'] = np.nan #no longer works with set_index moved before loop !
             merged.SOLDE.iloc[i - 1] = np.nan
         previousRow = row
 
     merged.fillna('', inplace=True)
 
+    print('\nAfter improving Solde col')
     print(merged)
 
 if __name__ == '__main__':
