@@ -237,6 +237,27 @@ def explGroupBy():
     print('\nAfter improving Solde col')
     print(merged)
 
+class CommiPay():
+    def loadExpenseData(self, filePathName):
+        '''
+        Reads a the csv data file containing expense data exported from the Android  expense manager
+        into a Pandas dataframe.
+        :param filePathName: file to read data from
+
+        :return: Pandas dataframe filled with filePathName expense data
+        '''
+        # Setting col names so it matches exp results structure
+        colNames = ['Date', 'Lib', 'DEBIT', 'CREDIT', 'Note']
+
+        df = pd.read_excel(filePathName, header=None, names=colNames)
+
+        #Replacing empty shop value
+        df['Lib'] = df['Lib'].fillna('Divers')
+
+        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+
+        return df
+
 if __name__ == '__main__':
 #    enterLoop()
     addedData(True)
