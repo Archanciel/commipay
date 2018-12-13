@@ -21,13 +21,13 @@ class TestCommiPay(unittest.TestCase):
         This test case ensures that the grid data are written into the csv file with a column title
         line as well as with a 0 index column storing the 0 based line index.
         '''
-        csvFileName = "expenseData.xlsx"
+        xlrxFileName = "testLoadExpenseData.xlsx"
         cp = CommiPay()
-        df = cp.loadExpenseData(csvFileName)
+        df = cp.loadExpenseData(xlrxFileName)
 
-        print(df.head())
+        self.assertEquals(681, len(df.index))
 
-        # with open(csvFileName, 'r') as file:
+        # with open(xlrxFileName, 'r') as file:
         #     reader = csv.reader(file, delimiter='\t')
         #
         #     # reading the header line and use it to determine the x dimension of the input data
