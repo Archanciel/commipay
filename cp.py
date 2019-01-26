@@ -263,4 +263,5 @@ if __name__ == '__main__':
     addedData(True)
     expenseData()
     expResult()
+    print('\nExploring group by ...')
     explGroupBy()
