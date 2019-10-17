@@ -204,18 +204,7 @@ def explGroupBy():
     merged.drop(merged.columns[[2, 3, 4]], axis=1, inplace=True)
     merged.columns = ['Date', 'Lib', 'DEBIT', 'CREDIT', 'SOLDE']
 
-    #Set index to Date/Lib couple
-    merged.set_index(['Date', 'Lib'], inplace=True)
-    merged.sort_index(inplace=True) #improves multi index select performance
-
-    print('\nExp data Group by')
-    print(merged)
-
-    previousRow = merged.iloc[0]
-
-    # required for exp.loc used in the loop below to succeed !
-    exp.set_index(['Date', 'Lib'], inplace=True)
-    exp.sort_index(inplace=True) #improves multi index select performance
+    #Set index to Date/Lib couSs multi index select performance
 
     for i in range(1, len(merged)):
         row = merged.iloc[i]
